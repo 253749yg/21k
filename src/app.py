@@ -1,5 +1,6 @@
 import requests
 import streamlit as st
+import os
 
 # API配置
 API_URL = "https://api.siliconflow.cn/v1/chat/completions"
@@ -58,3 +59,14 @@ if question:
         st.error("网络连接失败，请检查网络")
     except Exception as err:
         st.error(f"请求发生异常：{err}")
+
+# 新增：数据文件缺失检测
+target_file = "./data/readme.txt"
+try:
+    if os.path.exists(target_file):
+        with open(target_file,"r",encoding="utf-8") as f:
+            pass
+    else:
+        st.warning(f"检测到文件缺失：{target_file}")
+except Exception as e:
+    st.error(f"读取文件发生错误：{e}")
