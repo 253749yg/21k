@@ -41,7 +41,7 @@ if question:
     try:
         response = requests.post(API_URL, headers=HEADERS, json=request_data, timeout=15)
 
-        # 新增密钥失效判断
+        # 密钥失效判断
         if response.status_code == 401:
             st.error("API Key 失效，请检查密钥！")
         elif response.status_code >= 400:
@@ -59,8 +59,12 @@ if question:
         st.error("网络连接失败，请检查网络")
     except Exception as err:
         st.error(f"请求发生异常：{err}")
+else:
+    # 新增：用户空输入提示
+    if st.button("提交提问"):
+        st.warning("请输入你的问题，不允许空白提问！")
 
-# 新增：数据文件缺失检测
+# 数据文件缺失检测
 target_file = "./data/readme.txt"
 try:
     if os.path.exists(target_file):
