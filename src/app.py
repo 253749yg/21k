@@ -20,7 +20,11 @@ HEADERS = {
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
-# 一次性加载所有md知识库（新生入学、办事流程、电话黄页、交通出行全部读取）
+# 保存选中快捷问题
+if "quick_question" not in st.session_state:
+    st.session_state["quick_question"] = ""
+
+# 一次性加载所有md知识库
 all_knowledge = load_all_md_knowledge()
 
 # 任务要求：新生/在校生/教师三套独立system提示词
@@ -33,7 +37,27 @@ prompt_dict = {
 # 页面UI
 st.title("小航 · 郑州航院校园信息助手")
 role = st.selectbox("你是？", ["新生", "在校生", "教师"])
-question = st.text_input("有啥想问的？")
+
+# =========新增：分类标签页快捷提问 Tabs =========
+tab1, tab2, tab3 = st.tabs(["🏠宿舍生活", "📚学习教务", "🚗交通出行"])
+with tab1:
+    if st.button("宿舍可以使用大功率电器吗"):
+        st.session_state["quick_question"] = "宿舍可以使用大功率电器吗"
+    if st.button("宿舍门禁时间是几点"):
+        st.session_state["quick_question"] = "宿舍门禁时间是几点"
+with tab2:
+    if st.button("图书馆开放时间"):
+        st.session_state["quick_question"] = "图书馆开放时间"
+    if st.button("自习室怎么预约"):
+        st.session_state["quick_question"] = "自习室怎么预约"
+with tab3:
+    if st.button("到校公交路线"):
+        st.session_state["quick_question"] = "到校公交路线"
+    if st.button("龙子湖校区导航地址"):
+        st.session_state["quick_question"] = "龙子湖校区导航地址"
+
+# 文本输入框，优先显示快捷按钮选中内容
+question = st.text_input("有啥想问的？", value=st.session_state["quick_question"])
 
 # 输入内容不为空，发起AI请求
 if question:
@@ -48,13 +72,12 @@ if question:
         ]
     }
 
-    # try-except 异常捕获（文档强制要求：超时、网络、未知错误）
+    # try-except 异常捕获
     try:
-        # =========新增spinner加载动画========
+        # spinner加载动画
         with st.spinner("🤖小航正在努力思考中，请稍候..."):
             response = requests.post(API_URL, headers=HEADERS, json=request_data, timeout=15)
 
-            # 密钥失效判断
             if response.status_code == 401:
                 st.error("API Key 失效，请检查密钥！")
             elif response.status_code >= 400:
@@ -81,7 +104,7 @@ if question:
     except Exception as err:
         st.error(f"请求发生异常：{err}")
 else:
-    # 新增：用户空输入提示
+    # 空输入提示
     if st.button("提交提问"):
         st.warning("请输入你的问题，不允许空白提问！")
 
@@ -96,7 +119,7 @@ try:
 except Exception as e:
     st.error(f"读取文件发生错误：{e}")
 
-# ==========新增页面底部静态黄页表格==========
+# ==========底部校内电话黄页==========
 st.divider()
 st.header("📞 郑航校内电话黄页")
 st.caption("常用校内部门联系电话")
@@ -122,9 +145,10 @@ with col1:
 with col2:
     if st.button("清空历史记录"):
         st.session_state["history"] = []
+        st.session_state["quick_question"] = ""
         st.rerun()
 
-# reversed() 最新对话展示在上方
+# 展示历史对话
 for item in reversed(st.session_state["history"]):
     st.write(f"[{item['time']}] {item['role']} 提问：{item['question']}")
     st.write(f"回答：{item['answer']}")
