@@ -16,7 +16,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# =========【新增1】初始化会话历史存储 =========
+# =========【初始化会话历史存储 =========
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
@@ -64,7 +64,7 @@ if question:
             st.subheader("🤖小航回答：")
             st.write(ai_answer)
 
-            # =========【新增2】保存本次问答记录 =========
+            # 保存本次问答记录
             st.session_state["history"].append({
                 "time": time.strftime("%H:%M:%S"),
                 "role": role,
@@ -112,10 +112,17 @@ yellow_table = """
 st.markdown(yellow_table)
 st.warning("⚠️涉及转账、缴费的来电，请先和辅导员确认，防范电信诈骗！")
 
-# =========【新增3】问答历史展示区域 =========
+# =========问答历史区域 + 清空按钮【新增】 =========
 st.divider()
-st.header("📝问答历史")
-# reversed() 实现最新对话在最上方
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.header("📝问答历史")
+with col2:
+    if st.button("清空历史记录"):
+        st.session_state["history"] = []
+        st.rerun()
+
+# reversed() 最新对话展示在上方
 for item in reversed(st.session_state["history"]):
     st.write(f"[{item['time']}] {item['role']} 提问：{item['question']}")
     st.write(f"回答：{item['answer']}")
