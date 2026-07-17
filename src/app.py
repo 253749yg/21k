@@ -27,7 +27,7 @@ if "quick_question" not in st.session_state:
 # 一次性加载所有md知识库
 all_knowledge = load_all_md_knowledge()
 
-# 任务要求：新生/在校生/教师三套独立system提示词
+# 三套角色提示词
 prompt_dict = {
     "新生": f"你是小航，郑州航院校园信息助手，专门服务新生，耐心解答入学报到、校园导航、宿舍、食堂相关问题，回答简洁易懂。\n【校园参考资料】\n{all_knowledge}",
     "在校生": f"你是小航，郑州航院校园信息助手，服务在校学生，解答选课、自习室、图书馆、考试、社团相关问题。\n【校园参考资料】\n{all_knowledge}",
@@ -38,7 +38,7 @@ prompt_dict = {
 st.title("小航 · 郑州航院校园信息助手")
 role = st.selectbox("你是？", ["新生", "在校生", "教师"])
 
-# =========新增：分类标签页快捷提问 Tabs =========
+# =========分类标签页快捷提问 Tabs =========
 tab1, tab2, tab3 = st.tabs(["🏠宿舍生活", "📚学习教务", "🚗交通出行"])
 with tab1:
     if st.button("宿舍可以使用大功率电器吗"):
@@ -56,7 +56,7 @@ with tab3:
     if st.button("龙子湖校区导航地址"):
         st.session_state["quick_question"] = "龙子湖校区导航地址"
 
-# 文本输入框，优先显示快捷按钮选中内容
+# 文本输入框
 question = st.text_input("有啥想问的？", value=st.session_state["quick_question"])
 
 # 输入内容不为空，发起AI请求
@@ -74,6 +74,7 @@ if question:
 
     # try-except 异常捕获
     try:
+        start_time = time.time()
         # spinner加载动画
         with st.spinner("🤖小航正在努力思考中，请稍候..."):
             response = requests.post(API_URL, headers=HEADERS, json=request_data, timeout=15)
@@ -86,8 +87,12 @@ if question:
                 response.raise_for_status()
                 result = response.json()
                 ai_answer = result["choices"][0]["message"]["content"]
+                cost_time = round(time.time() - start_time, 2)
+                char_count = len(ai_answer)
+
                 st.subheader("🤖小航回答：")
                 st.write(ai_answer)
+                st.caption(f"本次回复耗时：{cost_time} 秒 | 回答总字数：{char_count}")
 
                 # 保存本次问答记录
                 st.session_state["history"].append({
