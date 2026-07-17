@@ -16,7 +16,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# =========【初始化会话历史存储 =========
+# 初始化会话历史存储
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
@@ -50,27 +50,29 @@ if question:
 
     # try-except 异常捕获（文档强制要求：超时、网络、未知错误）
     try:
-        response = requests.post(API_URL, headers=HEADERS, json=request_data, timeout=15)
+        # =========新增spinner加载动画========
+        with st.spinner("🤖小航正在努力思考中，请稍候..."):
+            response = requests.post(API_URL, headers=HEADERS, json=request_data, timeout=15)
 
-        # 密钥失效判断
-        if response.status_code == 401:
-            st.error("API Key 失效，请检查密钥！")
-        elif response.status_code >= 400:
-            st.warning(f"API请求异常，状态码：{response.status_code}")
-        else:
-            response.raise_for_status()
-            result = response.json()
-            ai_answer = result["choices"][0]["message"]["content"]
-            st.subheader("🤖小航回答：")
-            st.write(ai_answer)
+            # 密钥失效判断
+            if response.status_code == 401:
+                st.error("API Key 失效，请检查密钥！")
+            elif response.status_code >= 400:
+                st.warning(f"API请求异常，状态码：{response.status_code}")
+            else:
+                response.raise_for_status()
+                result = response.json()
+                ai_answer = result["choices"][0]["message"]["content"]
+                st.subheader("🤖小航回答：")
+                st.write(ai_answer)
 
-            # 保存本次问答记录
-            st.session_state["history"].append({
-                "time": time.strftime("%H:%M:%S"),
-                "role": role,
-                "question": question,
-                "answer": ai_answer,
-            })
+                # 保存本次问答记录
+                st.session_state["history"].append({
+                    "time": time.strftime("%H:%M:%S"),
+                    "role": role,
+                    "question": question,
+                    "answer": ai_answer,
+                })
 
     except requests.exceptions.Timeout:
         st.error("AI响应超时，请稍后重试！")
@@ -112,7 +114,7 @@ yellow_table = """
 st.markdown(yellow_table)
 st.warning("⚠️涉及转账、缴费的来电，请先和辅导员确认，防范电信诈骗！")
 
-# =========问答历史区域 + 清空按钮【新增】 =========
+# =========问答历史区域 + 清空按钮 =========
 st.divider()
 col1, col2 = st.columns([4, 1])
 with col1:
